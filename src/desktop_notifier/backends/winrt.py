@@ -250,8 +250,11 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
         if not sender:
             return
 
-        if dismissed_args and dismissed_args.reason == ToastDismissalReason.USER_CANCELED:
-            self.handle_dismissed(sender.tag)
+        if dismissed_args:
+            if dismissed_args.reason == ToastDismissalReason.USER_CANCELED:
+                self.handle_dismissed(sender.tag)
+            else:
+                self.handle_cleared(sender.tag)
 
     def _on_failed(
         self, sender: ToastNotification | None, failed_args: ToastFailedEventArgs | None

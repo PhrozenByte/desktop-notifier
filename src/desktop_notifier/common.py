@@ -223,6 +223,9 @@ class Notification:
     """Text field shown on an interactive notification. This can be used for example
     for messaging apps to reply directly from the notification."""
 
+    on_cleared: Callable[[], Any] | None = None
+    """Method to call when the notification is cleared without user interaction"""
+
     on_clicked: Callable[[], Any] | None = None
     """Method to call when the notification is clicked"""
 

@@ -29,6 +29,7 @@ class DesktopNotifierBackend(ABC):
         self.app_icon = app_icon
         self._notification_cache: dict[str, Notification] = dict()
 
+        self.on_cleared: Callable[[str], Any] | None = None
         self.on_clicked: Callable[[str], Any] | None = None
         self.on_dismissed: Callable[[str], Any] | None = None
         self.on_button_pressed: Callable[[str, str], Any] | None = None
@@ -142,6 +143,15 @@ class DesktopNotifierBackend(ABC):
         the notification server.
         """
         ...
+
+    def handle_cleared(self, identifier: str) -> None:
+        notification: Notification | None = self._clear_notification_from_cache(identifier)
+        if not notification:
+            return
+        if notification.on_cleared:
+            notification.on_cleared()
+        elif self.on_cleared:
+            self.on_cleared(identifier)
 
     def handle_clicked(self, identifier: str) -> None:
         notification: Notification | None = self._clear_notification_from_cache(identifier)
