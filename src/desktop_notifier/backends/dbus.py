@@ -67,7 +67,10 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         return True
 
-    async def _init_dbus(self) -> ProxyInterface:
+    async def _init_dbus(self) -> None:
+        if self.interface:
+            return
+
         self.bus = await MessageBus().connect()
         introspection = await self.bus.introspect(
             "org.freedesktop.Notifications", "/org/freedesktop/Notifications"
@@ -88,16 +91,13 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         if hasattr(self.interface, "on_action_invoked"):
             self.interface.on_action_invoked(self._on_action)
 
-        return self.interface
-
     async def _send(self, notification: Notification) -> None:
         """
         Asynchronously sends a notification via the Dbus interface.
 
         :param notification: Notification to send.
         """
-        if not self.interface:
-            self.interface = await self._init_dbus()
+        await self._init_dbus()
 
         # The "default" action is typically invoked when clicking on the
         # notification body itself, see
@@ -169,8 +169,7 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         Asynchronously removes a notification from the notification center
         """
-        if not self.interface:
-            return
+        await self._init_dbus()
 
         platform_id = self._platform_to_interface_notification_identifier.inverse[
             identifier
@@ -197,9 +196,6 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         Asynchronously clears all notifications from notification center
         """
-        if not self.interface:
-            return
-
         for identifier in list(
             self._platform_to_interface_notification_identifier.values()
         ):
