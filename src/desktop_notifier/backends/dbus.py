@@ -194,7 +194,8 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         Asynchronously clears all notifications from notification center
         """
-        for identifier in self._notification_cache.keys():
+        identifiers: [str] = list(self._notification_cache.keys())
+        for identifier in identifiers:
             await self._clear(identifier)
 
     # Note that _on_action and _on_closed might be called for the same notification
