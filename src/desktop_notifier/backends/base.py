@@ -8,7 +8,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
-from ..common import Capability, Notification, Icon
+from ..common import Capability, Notification, Icon, Button
 
 __all__ = [
     "DesktopNotifierBackend",
@@ -143,46 +143,43 @@ class DesktopNotifierBackend(ABC):
         """
         ...
 
-    def handle_clicked(
-        self, identifier: str, notification: Notification | None = None
-    ) -> None:
-        if notification and notification.on_clicked:
+    def handle_clicked(self, identifier: str) -> None:
+        notification: Notification | None = self._clear_notification_from_cache(identifier)
+        if not notification:
+            return
+        if notification.on_clicked:
             notification.on_clicked()
         elif self.on_clicked:
             self.on_clicked(identifier)
 
-    def handle_dismissed(
-        self, identifier: str, notification: Notification | None = None
-    ) -> None:
-        if notification and notification.on_dismissed:
+    def handle_dismissed(self, identifier: str) -> None:
+        notification: Notification | None = self._clear_notification_from_cache(identifier)
+        if not notification:
+            return
+        if notification.on_dismissed:
             notification.on_dismissed()
         elif self.on_dismissed:
             self.on_dismissed(identifier)
 
-    def handle_replied(
-        self, identifier: str, reply_text: str, notification: Notification | None = None
-    ) -> None:
-        if (
-            notification
-            and notification.reply_field
-            and notification.reply_field.on_replied
-        ):
-            notification.reply_field.on_replied(reply_text)
-        elif self.on_replied:
+    def handle_replied(self, identifier: str, reply_text: str) -> None:
+        notification: Notification | None = self._clear_notification_from_cache(identifier)
+        if not notification:
+            return
+        if notification.reply_field:
+            if notification.reply_field.on_replied:
+                notification.reply_field.on_replied(reply_text)
+                return
+        if self.on_replied:
             self.on_replied(identifier, reply_text)
 
-    def handle_button(
-        self,
-        identifier: str,
-        button_identifier: str,
-        notification: Notification | None = None,
-    ) -> None:
-        if notification and button_identifier in notification._buttons_dict:
-            button = notification._buttons_dict[button_identifier]
-        else:
-            button = None
-
-        if button and button.on_pressed:
-            button.on_pressed()
-        elif self.on_button_pressed:
+    def handle_button(self, identifier: str, button_identifier: str) -> None:
+        notification: Notification | None = self._clear_notification_from_cache(identifier)
+        if not notification:
+            return
+        if button_identifier in notification.buttons_dict:
+            button: Button = notification.buttons_dict[button_identifier]
+            if button.on_pressed:
+                button.on_pressed()
+                return
+        if self.on_button_pressed:
             self.on_button_pressed(identifier, button_identifier)
