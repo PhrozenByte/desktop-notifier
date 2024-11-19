@@ -28,6 +28,7 @@ __all__ = [
     "DispatchedNotification",
     "DEFAULT_ICON",
     "DEFAULT_SOUND",
+    "uuid_str",
 ]
 
 try:

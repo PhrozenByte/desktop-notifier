@@ -31,7 +31,7 @@ from winrt.windows.ui.notifications import (
 )
 
 # local imports
-from ..common import DEFAULT_SOUND, Capability, Notification, DispatchedNotification, Urgency, Icon
+from ..common import DEFAULT_SOUND, Capability, Notification, DispatchedNotification, Urgency, Icon, uuid_str
 from .base import DesktopNotifierBackend
 
 __all__ = ["WinRTDesktopNotifier"]
@@ -122,8 +122,13 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
 
         :param notification: Notification to send.
         """
+        identifier: str = notification.identifier
         if replace_notification:
             await self._clear(replace_notification.identifier)
+            identifier = replace_notification.identifier
+        elif identifier in self._notification_cache:
+            # identifier is already in use, generate a new random identifier
+            identifier = uuid_str()
 
         toast_xml = Element("toast", {"launch": DEFAULT_ACTION})
         visual_xml = SubElement(toast_xml, "visual")
@@ -216,7 +221,7 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
         xml_document.load_xml(tostring(toast_xml, encoding="unicode"))
 
         native = ToastNotification(xml_document)
-        native.tag = notification.identifier
+        native.tag = identifier
         native.priority = self._to_native_urgency[notification.urgency]
 
         native.add_activated(self._on_activated)
