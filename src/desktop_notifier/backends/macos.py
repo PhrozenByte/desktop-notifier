@@ -22,7 +22,7 @@ from packaging.version import Version
 from rubicon.objc import NSObject, ObjCClass, objc_method, py_from_ns
 from rubicon.objc.runtime import load_library, objc_block, objc_id
 
-from ..common import DEFAULT_SOUND, Capability, Notification, Urgency, Icon
+from ..common import DEFAULT_SOUND, Capability, Notification, DispatchedNotification, Urgency, Icon
 from .base import DesktopNotifierBackend
 from .macos_support import macos_version
 
@@ -194,12 +194,19 @@ class CocoaNotificationCenter(DesktopNotifierBackend):
 
         return authorized
 
-    async def _send(self, notification: Notification) -> None:
+    async def _send(
+        self,
+        notification: Notification,
+        replace_notification: DispatchedNotification | None = None,
+    ) -> None:
         """
         Uses UNUserNotificationCenter to schedule a notification.
 
         :param notification: Notification to send.
         """
+        if replace_notification:
+            await self._clear(replace_notification.identifier)
+
         # On macOS, we need to register a new notification category for every
         # unique set of buttons.
         category_id = await self._find_or_create_notification_category(notification)

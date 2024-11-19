@@ -31,7 +31,7 @@ from winrt.windows.ui.notifications import (
 )
 
 # local imports
-from ..common import DEFAULT_SOUND, Capability, Notification, Urgency, Icon
+from ..common import DEFAULT_SOUND, Capability, Notification, DispatchedNotification, Urgency, Icon
 from .base import DesktopNotifierBackend
 
 __all__ = ["WinRTDesktopNotifier"]
@@ -112,12 +112,19 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
             # See https://github.com/samschott/desktop-notifier/issues/95.
             return True
 
-    async def _send(self, notification: Notification) -> None:
+    async def _send(
+        self,
+        notification: Notification,
+        replace_notification: DispatchedNotification | None = None,
+    ) -> None:
         """
         Asynchronously sends a notification.
 
         :param notification: Notification to send.
         """
+        if replace_notification:
+            await self._clear(replace_notification.identifier)
+
         toast_xml = Element("toast", {"launch": DEFAULT_ACTION})
         visual_xml = SubElement(toast_xml, "visual")
         actions_xml = SubElement(toast_xml, "actions")

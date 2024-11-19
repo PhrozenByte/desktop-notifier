@@ -21,6 +21,7 @@ from .common import (
     Capability,
     Icon,
     Notification,
+    DispatchedNotification,
     ReplyField,
     Sound,
     Urgency,
@@ -28,6 +29,7 @@ from .common import (
 
 __all__ = [
     "Notification",
+    "DispatchedNotification",
     "Button",
     "ReplyField",
     "Icon",
@@ -182,7 +184,10 @@ class DesktopNotifier:
         """Returns whether we have authorisation to send notifications."""
         return await self._backend.has_authorisation()
 
-    async def send_notification(self, notification: Notification) -> str:
+    async def send_notification(
+        self,
+        notification: Notification | DispatchedNotification
+    ) -> DispatchedNotification | None:
         """
         Sends a desktop notification.
 
@@ -205,9 +210,7 @@ class DesktopNotifier:
 
         # We attempt to send the notification regardless of authorization.
         # The user may have changed settings in the meantime.
-        await self._backend.send(notification)
-
-        return notification.identifier
+        return await self._backend.send(notification)
 
     async def send(
         self,
@@ -224,15 +227,13 @@ class DesktopNotifier:
         sound: Sound | None = None,
         thread: str | None = None,
         timeout: int = -1,  # in seconds
-    ) -> str:
+    ) -> DispatchedNotification | None:
         """
         Sends a desktop notification
 
         This is a convenience function which creates a
         :class:`desktop_notifier.base.Notification` with the provided arguments and then
         calls :meth:`send_notification`.
-
-        :returns: An identifier for the scheduled notification.
         """
         notification = Notification(
             title,
@@ -251,7 +252,7 @@ class DesktopNotifier:
         )
         return await self.send_notification(notification)
 
-    async def get_current_notifications(self) -> list[str]:
+    async def get_current_notifications(self) -> dict[str, DispatchedNotification]:
         """Returns identifiers of all currently displayed notifications for this app."""
         return await self._backend.get_current_notifications()
 
