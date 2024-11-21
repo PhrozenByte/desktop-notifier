@@ -167,69 +167,62 @@ class DesktopNotifierBackend(ABC):
 
     def handle_cleared(self, identifier: str) -> None:
         dispatched_notification: DispatchedNotification | None = self._clear_notification_from_cache(identifier)
-        if not dispatched_notification or dispatched_notification.cleared:
-            return
+        if dispatched_notification and not dispatched_notification.cleared:
+            dispatched_notification.cleared = True
 
-        dispatched_notification.cleared = True
-
-        if dispatched_notification.notification.on_cleared:
-            dispatched_notification.notification.on_cleared()
-        elif self.on_cleared:
+            if dispatched_notification.notification.on_cleared:
+                dispatched_notification.notification.on_cleared()
+                return
+        if self.on_cleared:
             self.on_cleared(identifier)
 
     def handle_clicked(self, identifier: str) -> None:
         dispatched_notification: DispatchedNotification | None = self._clear_notification_from_cache(identifier)
-        if not dispatched_notification or dispatched_notification.cleared:
-            return
+        if dispatched_notification and not dispatched_notification.cleared:
+            dispatched_notification.cleared = True
+            dispatched_notification.clicked = True
 
-        dispatched_notification.cleared = True
-        dispatched_notification.clicked = True
-
-        if dispatched_notification.notification.on_clicked:
-            dispatched_notification.notification.on_clicked()
-        elif self.on_clicked:
+            if dispatched_notification.notification.on_clicked:
+                dispatched_notification.notification.on_clicked()
+                return
+        if self.on_clicked:
             self.on_clicked(identifier)
 
     def handle_dismissed(self, identifier: str) -> None:
         dispatched_notification: DispatchedNotification | None = self._clear_notification_from_cache(identifier)
-        if not dispatched_notification or dispatched_notification.cleared:
-            return
+        if dispatched_notification and not dispatched_notification.cleared:
+            dispatched_notification.cleared = True
+            dispatched_notification.dismissed = True
 
-        dispatched_notification.cleared = True
-        dispatched_notification.dismissed = True
-
-        if dispatched_notification.notification.on_dismissed:
-            dispatched_notification.notification.on_dismissed()
-        elif self.on_dismissed:
+            if dispatched_notification.notification.on_dismissed:
+                dispatched_notification.notification.on_dismissed()
+                return
+        if self.on_dismissed:
             self.on_dismissed(identifier)
 
     def handle_replied(self, identifier: str, reply_text: str) -> None:
         dispatched_notification: DispatchedNotification | None = self._clear_notification_from_cache(identifier)
-        if not dispatched_notification or dispatched_notification.cleared:
-            return
+        if dispatched_notification and not dispatched_notification.cleared:
+            dispatched_notification.cleared = True
+            dispatched_notification.replied = reply_text
 
-        dispatched_notification.cleared = True
-        dispatched_notification.replied = reply_text
-
-        if dispatched_notification.notification.reply_field:
-            if dispatched_notification.notification.reply_field.on_replied:
-                dispatched_notification.notification.reply_field.on_replied(reply_text)
-                return
+            if dispatched_notification.notification.reply_field:
+                if dispatched_notification.notification.reply_field.on_replied:
+                    dispatched_notification.notification.reply_field.on_replied(reply_text)
+                    return
         if self.on_replied:
             self.on_replied(identifier, reply_text)
 
     def handle_button(self, identifier: str, button_identifier: str) -> None:
         dispatched_notification: DispatchedNotification | None = self._clear_notification_from_cache(identifier)
-        if not dispatched_notification or dispatched_notification.cleared:
-            return
+        if dispatched_notification and not dispatched_notification.cleared:
+            dispatched_notification.cleared = True
+            dispatched_notification.button_clicked = button_identifier
 
-        dispatched_notification.cleared = True
-        dispatched_notification.button_clicked = button_identifier
-
-        if button_identifier in dispatched_notification.notification.buttons_dict:
-            button: Button = dispatched_notification.notification.buttons_dict[button_identifier]
-            if button.on_pressed:
-                button.on_pressed()
-                return
+            if button_identifier in dispatched_notification.notification.buttons_dict:
+                button: Button = dispatched_notification.notification.buttons_dict[button_identifier]
+                if button.on_pressed:
+                    button.on_pressed()
+                    return
         if self.on_button_pressed:
             self.on_button_pressed(identifier, button_identifier)
