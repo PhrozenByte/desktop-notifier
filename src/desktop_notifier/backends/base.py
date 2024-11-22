@@ -184,7 +184,7 @@ class DesktopNotifierBackend(ABC):
     def handle_cleared(self, identifier: str) -> None:
         dispatched_notification = self._clear_notification_from_cache(identifier)
         if dispatched_notification and not dispatched_notification.cleared:
-            dispatched_notification.cleared = True
+            object.__setattr__(dispatched_notification, "cleared", True)
 
             if dispatched_notification.notification.on_cleared:
                 dispatched_notification.notification.on_cleared()
@@ -195,8 +195,8 @@ class DesktopNotifierBackend(ABC):
     def handle_clicked(self, identifier: str) -> None:
         dispatched_notification = self._clear_notification_from_cache(identifier)
         if dispatched_notification and not dispatched_notification.cleared:
-            dispatched_notification.cleared = True
-            dispatched_notification.clicked = True
+            object.__setattr__(dispatched_notification, "cleared", True)
+            object.__setattr__(dispatched_notification, "clicked", True)
 
             if dispatched_notification.notification.on_clicked:
                 dispatched_notification.notification.on_clicked()
@@ -207,8 +207,8 @@ class DesktopNotifierBackend(ABC):
     def handle_dismissed(self, identifier: str) -> None:
         dispatched_notification = self._clear_notification_from_cache(identifier)
         if dispatched_notification and not dispatched_notification.cleared:
-            dispatched_notification.cleared = True
-            dispatched_notification.dismissed = True
+            object.__setattr__(dispatched_notification, "cleared", True)
+            object.__setattr__(dispatched_notification, "dismissed", True)
 
             if dispatched_notification.notification.on_dismissed:
                 dispatched_notification.notification.on_dismissed()
@@ -219,8 +219,8 @@ class DesktopNotifierBackend(ABC):
     def handle_replied(self, identifier: str, reply_text: str) -> None:
         dispatched_notification = self._clear_notification_from_cache(identifier)
         if dispatched_notification and not dispatched_notification.cleared:
-            dispatched_notification.cleared = True
-            dispatched_notification.replied = reply_text
+            object.__setattr__(dispatched_notification, "cleared", True)
+            object.__setattr__(dispatched_notification, "replied", reply_text)
 
             if dispatched_notification.notification.reply_field:
                 reply_field = dispatched_notification.notification.reply_field
@@ -233,8 +233,8 @@ class DesktopNotifierBackend(ABC):
     def handle_button(self, identifier: str, button_identifier: str) -> None:
         dispatched_notification = self._clear_notification_from_cache(identifier)
         if dispatched_notification and not dispatched_notification.cleared:
-            dispatched_notification.cleared = True
-            dispatched_notification.button_clicked = button_identifier
+            object.__setattr__(dispatched_notification, "cleared", True)
+            object.__setattr__(dispatched_notification, "button_clicked", button_identifier)
 
             buttons = dispatched_notification.notification.buttons_dict
             if button_identifier in buttons:

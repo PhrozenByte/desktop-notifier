@@ -279,7 +279,7 @@ class Notification:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class DispatchedNotification:
     """A desktop notification that was sent to the notifications server earlier"""
 
@@ -293,19 +293,19 @@ class DispatchedNotification:
     notification: Notification
     """The notification that was sent to the notifications server"""
 
-    cleared: bool = False
+    cleared: bool = field(default=False, init=False, repr=False)
     """Whether the notification has been cleared (both with and without user interaction, updated at runtime)"""
 
-    clicked: bool = False
+    clicked: bool = field(default=False, init=False, repr=False)
     """Whether the user clicked on the notification (updated at runtime)"""
 
-    dismissed: bool = False
+    dismissed: bool = field(default=False, init=False, repr=False)
     """Whether the user dismissed the notification (updated at runtime)"""
 
-    button_clicked: str | None = None
+    button_clicked: str | None = field(default=None, init=False, repr=False)
     """The identifier of the button the user clicked on, if applicable (updated at runtime)"""
 
-    replied: str | None = None
+    replied: str | None = field(default=None, init=False, repr=False)
     """The text the user entered into the notification's reply field, if applicable (updated at runtime)"""
 
 
