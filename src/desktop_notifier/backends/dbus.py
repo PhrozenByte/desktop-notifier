@@ -15,7 +15,7 @@ from dbus_fast.aio.proxy_object import ProxyInterface
 from dbus_fast.errors import DBusError
 from dbus_fast.signature import Variant
 
-from ..common import Capability, Notification, DispatchedNotification, Urgency, Icon
+from ..common import Capability, DispatchedNotification, Icon, Notification, Urgency
 from .base import DesktopNotifierBackend
 
 __all__ = ["DBusDesktopNotifier"]
@@ -65,10 +65,7 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         return True
 
-    async def _init_dbus(self) -> None:
-        if self.interface:
-            return
-
+    async def _init_dbus(self) -> ProxyInterface:
         self.bus = await MessageBus().connect()
         introspection = await self.bus.introspect(
             "org.freedesktop.Notifications", "/org/freedesktop/Notifications"
@@ -89,6 +86,8 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         if hasattr(self.interface, "on_action_invoked"):
             self.interface.on_action_invoked(self._on_action)
 
+        return self.interface
+
     async def _send(
         self,
         notification: Notification,
@@ -99,7 +98,8 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
 
         :param notification: Notification to send.
         """
-        await self._init_dbus()
+        if not self.interface:
+            self.interface = await self._init_dbus()
 
         platform_id: int = 0
         if replace_notification:
@@ -152,9 +152,18 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         timeout = notification.timeout * 1000 if notification.timeout != -1 else -1
 
         icon: str = ""
-        if notification.icon or self.app_icon:
-            icon_obj: Icon = notification.icon or self.app_icon
-            icon = icon_obj.name if icon_obj.is_named() else icon_obj.as_uri()
+        if notification.icon:
+            icon = (
+                notification.icon.as_name()
+                if notification.icon.is_named()
+                else notification.icon.as_uri()
+            )
+        elif self.app_icon:
+            icon = (
+                self.app_icon.as_name()
+                if self.app_icon.is_named()
+                else self.app_icon.as_uri()
+            )
 
         # dbus_next proxy APIs are generated at runtime. Silence the type checker but
         # raise an AttributeError if required.
@@ -175,7 +184,8 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         Asynchronously removes a notification from the notification center
         """
-        await self._init_dbus()
+        if not self.interface:
+            self.interface = await self._init_dbus()
 
         platform_id = int(identifier)
 
@@ -194,7 +204,7 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
         """
         Asynchronously clears all notifications from notification center
         """
-        identifiers: [str] = list(self._notification_cache.keys())
+        identifiers = list(self._notification_cache.keys())
         for identifier in identifiers:
             await self._clear(identifier)
 

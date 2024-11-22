@@ -96,7 +96,6 @@ class FileResource:
         if self.uri is not None:
             parsed_uri = urlparse(self.uri)
             return Path(unquote(parsed_uri.path))
-
         raise AttributeError("No path or URI provided")
 
 
@@ -110,6 +109,11 @@ class Resource(FileResource):
 
     name: str | None = None
     """Name of the system resource"""
+
+    def as_name(self) -> str:
+        if self.name is not None:
+            return self.name
+        raise AttributeError("No resource name provided")
 
     def is_named(self) -> bool:
         """Returns whether the instance was initialized with ``name``"""
@@ -254,10 +258,12 @@ class Notification:
     """A unique identifier for this notification. Generated automatically if not
     passed by the client."""
 
-    _buttons_dict: dict[str, Button] = field(default_factory=dict, init=False, repr=False, compare=False)
+    _buttons_dict: dict[str, Button] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     @property
-    def buttons_dict(self):
+    def buttons_dict(self) -> dict[str, Button]:
         return self._buttons_dict
 
     def __post_init__(self) -> None:

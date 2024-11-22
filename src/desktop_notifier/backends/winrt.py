@@ -31,7 +31,15 @@ from winrt.windows.ui.notifications import (
 )
 
 # local imports
-from ..common import DEFAULT_SOUND, Capability, Notification, DispatchedNotification, Urgency, Icon, uuid_str
+from ..common import (
+    DEFAULT_SOUND,
+    Capability,
+    DispatchedNotification,
+    Icon,
+    Notification,
+    Urgency,
+    uuid_str,
+)
 from .base import DesktopNotifierBackend
 
 __all__ = ["WinRTDesktopNotifier"]
@@ -122,7 +130,7 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
 
         :param notification: Notification to send.
         """
-        identifier: str = notification.identifier
+        identifier = notification.identifier
         if replace_notification:
             await self._clear(replace_notification.identifier)
             identifier = replace_notification.identifier
@@ -154,17 +162,21 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
         message_xml = SubElement(binding, "text")
         message_xml.text = notification.message
 
-        if notification.icon or self.app_icon:
-            icon_obj: Icon = notification.icon or self.app_icon
-            if icon_obj.is_file():
-                SubElement(
-                    binding,
-                    "image",
-                    {
-                        "placement": "appLogoOverride",
-                        "src": icon_obj.as_uri(),
-                    },
-                )
+        icon_obj: Icon | None = None
+        if notification.icon:
+            icon_obj = notification.icon
+        elif self.app_icon:
+            icon_obj = self.app_icon
+
+        if icon_obj and icon_obj.is_file():
+            SubElement(
+                binding,
+                "image",
+                {
+                    "placement": "appLogoOverride",
+                    "src": icon_obj.as_uri(),
+                },
+            )
 
         if notification.attachment:
             SubElement(
