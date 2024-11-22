@@ -6,13 +6,14 @@ from desktop_notifier import (
     DEFAULT_SOUND,
     Button,
     DesktopNotifierSync,
+    DispatchedNotification,
     ReplyField,
     Urgency,
 )
 
 
 def test_send(notifier_sync: DesktopNotifierSync) -> None:
-    notification = notifier_sync.send(
+    dispatched_notification = notifier_sync.send(
         title="Julius Caesar",
         message="Et tu, Brute?",
         urgency=Urgency.Critical,
@@ -33,7 +34,8 @@ def test_send(notifier_sync: DesktopNotifierSync) -> None:
         thread="test_notifications",
         timeout=5,
     )
-    assert notification in notifier_sync.get_current_notifications()
+    assert isinstance(dispatched_notification, DispatchedNotification)
+    assert dispatched_notification in notifier_sync.get_current_notifications().values()
 
 
 @pytest.mark.skipif(
@@ -49,12 +51,19 @@ def test_clear(notifier_sync: DesktopNotifierSync) -> None:
         title="Julius Caesar",
         message="Et tu, Brute?",
     )
-    current_notifications = notifier_sync.get_current_notifications()
-    assert n0 in current_notifications
-    assert n1 in current_notifications
 
-    notifier_sync.clear(n0)
-    assert n0 not in notifier_sync.get_current_notifications()
+    assert isinstance(n0, DispatchedNotification)
+    assert isinstance(n0, DispatchedNotification)
+
+    nlist0 = notifier_sync.get_current_notifications().values()
+    assert len(nlist0) == 2
+    assert n0 in nlist0
+    assert n1 in nlist0
+
+    notifier_sync.clear(n0.identifier)
+    nlist1 = notifier_sync.get_current_notifications().values()
+    assert len(nlist0) == 1
+    assert n0 not in nlist1
 
 
 def test_clear_all(notifier_sync: DesktopNotifierSync) -> None:
@@ -67,7 +76,11 @@ def test_clear_all(notifier_sync: DesktopNotifierSync) -> None:
         message="Et tu, Brute?",
     )
 
-    current_notifications = notifier_sync.get_current_notifications()
+    assert isinstance(n0, DispatchedNotification)
+    assert isinstance(n0, DispatchedNotification)
+
+    current_notifications = notifier_sync.get_current_notifications().values()
+    assert len(current_notifications) == 2
     assert n0 in current_notifications
     assert n1 in current_notifications
 

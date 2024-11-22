@@ -8,7 +8,9 @@ from desktop_notifier import (
     Attachment,
     Button,
     DesktopNotifier,
+    DispatchedNotification,
     Icon,
+    Notification,
     ReplyField,
     Sound,
     Urgency,
@@ -30,7 +32,7 @@ async def test_request_authorisation(notifier: DesktopNotifier) -> None:
 
 @pytest.mark.asyncio
 async def test_send(notifier: DesktopNotifier) -> None:
-    notification = await notifier.send(
+    dispatched_notification = await notifier.send(
         title="Julius Caesar",
         message="Et tu, Brute?",
         urgency=Urgency.Critical,
@@ -48,7 +50,49 @@ async def test_send(notifier: DesktopNotifier) -> None:
         thread="test_notifications",
         timeout=5,
     )
-    assert notification in await notifier.get_current_notifications()
+    assert isinstance(dispatched_notification, DispatchedNotification)
+
+    current_notifications = (await notifier.get_current_notifications()).values()
+    assert len(current_notifications) == 1
+    assert dispatched_notification in current_notifications
+
+
+@pytest.mark.asyncio
+async def test_send_twice(notifier: DesktopNotifier) -> None:
+    notification = Notification(
+        title="Julius Caesar",
+        message="Et tu, Brute?",
+    )
+
+    n0 = await notifier.send_notification(notification)
+    assert isinstance(n0, DispatchedNotification)
+
+    n1 = await notifier.send_notification(notification)
+    assert isinstance(n1, DispatchedNotification)
+
+    current_notifications = (await notifier.get_current_notifications()).values()
+    assert len(current_notifications) == 2
+    assert n0 in current_notifications
+    assert n1 in current_notifications
+
+
+@pytest.mark.asyncio
+async def test_resend(notifier: DesktopNotifier) -> None:
+    notification = Notification(
+        title="Julius Caesar",
+        message="Et tu, Brute?",
+    )
+
+    n0 = await notifier.send_notification(notification)
+    assert isinstance(n0, DispatchedNotification)
+
+    n1 = await notifier.send_notification(n0)
+    assert isinstance(n1, DispatchedNotification)
+
+    current_notifications = (await notifier.get_current_notifications()).values()
+    assert len(current_notifications) == 1
+    assert n0 not in current_notifications
+    assert n1 in current_notifications
 
 
 @pytest.mark.asyncio
@@ -125,12 +169,19 @@ async def test_clear(notifier: DesktopNotifier) -> None:
         title="Julius Caesar",
         message="Et tu, Brute?",
     )
-    current_notifications = await notifier.get_current_notifications()
-    assert n0 in current_notifications
-    assert n1 in current_notifications
 
-    await notifier.clear(n0)
-    assert n0 not in await notifier.get_current_notifications()
+    assert isinstance(n0, DispatchedNotification)
+    assert isinstance(n0, DispatchedNotification)
+
+    nlist0 = (await notifier.get_current_notifications()).values()
+    assert len(nlist0) == 2
+    assert n0 in nlist0
+    assert n1 in nlist0
+
+    await notifier.clear(n0.identifier)
+    nlist1 = (await notifier.get_current_notifications()).values()
+    assert len(nlist0) == 1
+    assert n0 not in nlist1
 
 
 @pytest.mark.asyncio
@@ -144,7 +195,11 @@ async def test_clear_all(notifier: DesktopNotifier) -> None:
         message="Et tu, Brute?",
     )
 
-    current_notifications = await notifier.get_current_notifications()
+    assert isinstance(n0, DispatchedNotification)
+    assert isinstance(n0, DispatchedNotification)
+
+    current_notifications = (await notifier.get_current_notifications()).values()
+    assert len(current_notifications) == 2
     assert n0 in current_notifications
     assert n1 in current_notifications
 
