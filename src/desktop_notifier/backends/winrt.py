@@ -227,6 +227,12 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
         else:
             sound_attr = {"silent": "true"}
 
+        # Windows' `expiration_time` doesn't actually dismiss the notification, it just
+        # controls after which time the notification is sent to the notifications center
+        # expiration_time: datetime | None = None
+        # if notification.timeout != -1:
+        #     expiration_time = datetime.now() + timedelta(seconds=notification.timeout)
+
         SubElement(toast_xml, "audio", sound_attr)
 
         xml_document = XmlDocument()
@@ -235,6 +241,7 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
         native = ToastNotification(xml_document)
         native.tag = identifier
         native.priority = self._to_native_urgency[notification.urgency]
+        # native.expiration_time = expiration_time
 
         native.add_activated(self._on_activated)
         native.add_dismissed(self._on_dismissed)
@@ -277,8 +284,6 @@ class WinRTDesktopNotifier(DesktopNotifierBackend):
         if dismissed_args:
             if dismissed_args.reason == ToastDismissalReason.USER_CANCELED:
                 self.handle_dismissed(sender.tag)
-            else:
-                self.handle_cleared(sender.tag)
 
     def _on_failed(
         self, sender: ToastNotification | None, failed_args: ToastFailedEventArgs | None
