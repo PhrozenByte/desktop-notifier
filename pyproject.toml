@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "desktop-notifier"
-version = "6.0.0"
+version = "7.0.0"
 authors = [{name = "Sam Schott", email = "sam.schott@outlook.com"}]
 license = {text = "MIT"}
 description = "Python library for cross-platform desktop notifications"
@@ -39,7 +39,6 @@ classifiers = [
 ]
 requires-python = ">=3.7"
 dependencies = [
-    "bidict",
     "packaging",
     "dbus-fast;sys_platform=='linux'",
     "rubicon-objc;sys_platform=='darwin'",
@@ -81,9 +80,7 @@ docs = [
 desktop_notifier = ["**/*.png"]
 
 [tool.flake8]
-ignore = "E203,E501,W503,H306"
-per-file-ignores = """
-__init__.py: F401"""
+ignore = "E501,W503"
 statistics = "True"
 
 [tool.mypy]
