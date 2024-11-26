@@ -4,6 +4,7 @@ This module defines the abstract implementation class that backends must inherit
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable
@@ -28,6 +29,7 @@ class DesktopNotifierBackend(ABC):
         self.app_name = app_name
         self._notification_cache: dict[str, Notification] = dict()
 
+        self.on_dispatched: Callable[[str], Any] | None = None
         self.on_clicked: Callable[[str], Any] | None = None
         self.on_dismissed: Callable[[str], Any] | None = None
         self.on_button_pressed: Callable[[str, str], Any] | None = None
@@ -66,6 +68,15 @@ class DesktopNotifierBackend(ABC):
         else:
             logger.debug("Notification sent: %s", notification)
             self._notification_cache[notification.identifier] = notification
+
+            asyncio.create_task(
+                self._dispatched_task(notification.identifier, notification)
+            )
+
+    async def _dispatched_task(
+        self, identifier: str, notification: Notification
+    ) -> None:
+        self.handle_dispatched(identifier, notification)
 
     def _clear_notification_from_cache(self, identifier: str) -> Notification | None:
         """
@@ -141,6 +152,14 @@ class DesktopNotifierBackend(ABC):
         the notification server.
         """
         ...
+
+    def handle_dispatched(
+        self, identifier: str, notification: Notification | None = None
+    ) -> None:
+        if notification and notification.on_dispatched:
+            notification.on_dispatched()
+        elif self.on_dispatched:
+            self.on_dispatched(identifier)
 
     def handle_clicked(
         self, identifier: str, notification: Notification | None = None
