@@ -146,11 +146,50 @@ class DesktopNotifierSync:
         return self._run_coro_sync(coro)
 
     @property
+    def on_dispatched(self) -> Callable[[str], Any] | None:
+        """
+        A method to call when a notification is sent to the notifications server
+
+        The method must take the notification identifier as a single argument.
+
+        If the notification itself already specifies an on_dispatched handler, it will
+        be used instead of the class-level handler.
+        """
+        return self._async_api.on_dispatched
+
+    @on_dispatched.setter
+    def on_dispatched(self, handler: Callable[[str], Any] | None) -> None:
+        self._async_api.on_dispatched = handler
+
+    @property
+    def on_cleared(self) -> Callable[[str], Any] | None:
+        """
+        A method to call when a notification is cleared without user interaction
+        (e.g. after a timeout, or if cleared by another process)
+
+        The method must take the notification identifier as a single argument. You must
+        check whether the given identifier matches any of the notifications you care
+        about, because the notifications server might signal events of other
+        applications as well.
+
+        If the notification itself already specifies an on_cleared handler, it will be
+        used instead of the class-level handler.
+        """
+        return self._async_api.on_cleared
+
+    @on_cleared.setter
+    def on_cleared(self, handler: Callable[[str], Any] | None) -> None:
+        self._async_api.on_cleared = handler
+
+    @property
     def on_clicked(self) -> Callable[[str], Any] | None:
         """
         A method to call when a notification is clicked
 
-        The method must take the notification identifier as a single argument.
+        The method must take the notification identifier as a single argument. You must
+        check whether the given identifier matches any of the notifications you care
+        about, because the notifications server might signal events of other
+        applications as well.
 
         If the notification itself already specifies an on_clicked handler, it will be
         used instead of the class-level handler.
@@ -166,7 +205,10 @@ class DesktopNotifierSync:
         """
         A method to call when a notification is dismissed
 
-        The method must take the notification identifier as a single argument.
+        The method must take the notification identifier as a single argument. You must
+        check whether the given identifier matches any of the notifications you care
+        about, because the notifications server might signal events of other
+        applications as well.
 
         If the notification itself already specifies an on_dismissed handler, it will be
         used instead of the class-level handler.
@@ -180,10 +222,12 @@ class DesktopNotifierSync:
     @property
     def on_button_pressed(self) -> Callable[[str, str], Any] | None:
         """
-        A method to call when a notification is dismissed
+        A method to call when one of the notification's buttons is clicked
 
         The method must take the notification identifier and the button identifier as
-        arguments.
+        arguments. You must check whether the given identifier matches any of the
+        notifications you care about, because the notifications server might signal
+        events of other applications as well.
 
         If the notification button itself already specifies an on_pressed handler, it
         will be used instead of the class-level handler.
@@ -200,6 +244,9 @@ class DesktopNotifierSync:
         A method to call when a user responds through the reply field of a notification
 
         The method must take the notification identifier and input text as arguments.
+        You must check whether the given identifier matches any of the notifications
+        you care about, because the notifications server might signal events of other
+        applications as well.
 
         If the notification's reply field itself already specifies an on_replied
         handler, it will be used instead of the class-level handler.

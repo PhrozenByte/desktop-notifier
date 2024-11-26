@@ -302,7 +302,10 @@ class DesktopNotifier:
         A method to call when a notification is cleared without user interaction
         (e.g. after a timeout, or if cleared by another process)
 
-        The method must take the notification identifier as a single argument.
+        The method must take the notification identifier as a single argument. You must
+        check whether the given identifier matches any of the notifications you care
+        about, because the notifications server might signal events of other
+        applications as well.
 
         If the notification itself already specifies an on_cleared handler, it will be
         used instead of the class-level handler.
