@@ -249,6 +249,8 @@ class DBusDesktopNotifier(DesktopNotifierBackend):
 
         if reason == NOTIFICATION_CLOSED_DISMISSED:
             self.handle_dismissed(identifier, notification)
+        else:
+            self.handle_cleared(identifier, notification)
 
     async def get_capabilities(self) -> frozenset[Capability]:
         if not self.interface:
