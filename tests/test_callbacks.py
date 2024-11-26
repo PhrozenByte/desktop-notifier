@@ -1,4 +1,5 @@
 import platform
+import sys
 from unittest.mock import Mock
 
 import pytest
@@ -26,6 +27,46 @@ async def check_supported(notifier: DesktopNotifier, capability: Capability) -> 
     capabilities = await notifier.get_capabilities()
     if capability not in capabilities:
         pytest.skip(f"{notifier} not supported by backend")
+
+
+@pytest.mark.asyncio
+async def test_cleared_callback_called(notifier: DesktopNotifier) -> None:
+    await check_supported(notifier, Capability.ON_CLEARED)
+
+    class_handler = Mock()
+    notification_handler = Mock()
+    notifier.on_cleared = class_handler
+    notification = Notification(
+        title="Julius Caesar",
+        message="Et tu, Brute?",
+        on_cleared=notification_handler,
+    )
+
+    identifier = await notifier.send_notification(notification)
+    await notifier.clear(identifier)
+
+    class_handler.assert_not_called()
+    notification_handler.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_cleared_callback_not_dismissed(notifier: DesktopNotifier) -> None:
+    await check_supported(notifier, Capability.ON_CLEARED)
+
+    on_cleared = Mock()
+    on_dismissed = Mock()
+    notification = Notification(
+        title="Julius Caesar",
+        message="Et tu, Brute?",
+        on_cleared=on_cleared,
+        on_dismissed=on_dismissed,
+    )
+
+    identifier = await notifier.send_notification(notification)
+    await notifier.clear(identifier)
+
+    on_dismissed.assert_not_called()
+    on_cleared.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -133,6 +174,20 @@ async def test_replied_callback_called(notifier: DesktopNotifier) -> None:
 
     class_handler.assert_not_called()
     notification_handler.assert_called_with("A notification response")
+
+
+@pytest.mark.asyncio
+async def test_cleared_fallback_handler_called(notifier: DesktopNotifier) -> None:
+    await check_supported(notifier, Capability.ON_CLEARED)
+
+    class_handler = Mock()
+    notifier.on_cleared = class_handler
+    notification = Notification(title="Julius Caesar", message="Et tu, Brute?")
+
+    identifier = await notifier.send_notification(notification)
+    await notifier.clear(identifier)
+
+    class_handler.assert_called_with(identifier)
 
 
 @pytest.mark.asyncio
